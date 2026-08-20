@@ -10,6 +10,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.background import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
@@ -316,14 +317,15 @@ async def download(
                 raise Exception("No media files were produced from the extraction.")
 
             if len(downloaded_files) == 1:
-                progress_state["filename"] = downloaded_files[0].name
+                final_name = downloaded_files[0].name
+                progress_state["filename"] = f"{task_id}/{final_name}"
             else:
-                zip_name = "youtube_playlist.zip"
+                zip_name = f"{task_id}.zip"
                 zip_path = task_dir / zip_name
                 with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                     for f in downloaded_files:
                         zipf.write(f, arcname=f.name)
-                progress_state["filename"] = zip_name
+                progress_state["filename"] = f"{task_id}/{zip_name}"
 
             progress_state["percent"] = 100.0
             progress_state["status"] = "done"
@@ -358,15 +360,27 @@ async def download(
 
 
 @app.get("/api/file/{filename:path}")
-async def serve_file(filename: str):
-    for task_dir in DOWNLOAD_DIR.iterdir():
-        if not task_dir.is_dir():
-            continue
-        target = task_dir / filename
-        if target.exists():
-            return FileResponse(
-                path=str(target),
-                filename=filename,
-                media_type="application/octet-stream",
-            )
+async def serve_file(filename: str, background_tasks: BackgroundTasks):
+    target = DOWNLOAD_DIR / filename
+    if target.exists() and target.is_file():
+        parts = filename.split("/")
+        task_id = parts[0] if len(parts) > 1 else None
+        
+        def cleanup():
+            if task_id:
+                task_dir = DOWNLOAD_DIR / task_id
+                shutil.rmtree(task_dir, ignore_errors=True)
+
+        background_tasks.add_task(cleanup)
+        
+        # Present a nice filename to the user instead of the UUID
+        download_name = "youtube_playlist.zip" if target.name.endswith(".zip") else target.name
+        if len(parts) > 1 and target.name.endswith(".zip"):
+            download_name = "youtube_playlist.zip"
+            
+        return FileResponse(
+            path=str(target),
+            filename=download_name,
+            media_type="application/octet-stream",
+        )
     raise HTTPException(status_code=404, detail="File not found")
