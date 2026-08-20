@@ -262,12 +262,14 @@ async def download(
             else:
                 if format_id in ("best", "auto", ""):
                     format_str = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+                elif format_id == "1080p":
+                    format_str = "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best"
+                elif format_id == "720p":
+                    format_str = "bestvideo[ext=mp4][height<=720]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best"
+                elif format_id == "480p":
+                    format_str = "bestvideo[ext=mp4][height<=480]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best"
                 else:
-                    format_str = f"{format_id}+bestaudio/best"
-                base_postprocessors.append({
-                    "key": "FFmpegVideoConvertor",
-                    "preferedformat": "mp4",
-                })
+                    format_str = f"{format_id}+bestaudio[ext=m4a]/{format_id}+bestaudio/best"
 
             if sponsorblock:
                 base_postprocessors.append({
@@ -289,6 +291,9 @@ async def download(
                 "no_warnings": True,
                 "ignoreerrors": True,
             }
+
+            if not is_audio:
+                common_opts["merge_output_format"] = "mkv"
 
             if embed_subs and not is_audio:
                 common_opts["writesubtitles"] = True

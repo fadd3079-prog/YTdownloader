@@ -1,31 +1,49 @@
-import { Zap, Gauge, RefreshCw } from "lucide-react"
+import { Zap, Gauge, RefreshCw, ListVideo } from "lucide-react"
 
 interface Props {
   percent: number
   speed: string
   eta: string
   status: string
+  currentItem?: number
+  totalItems?: number
+  currentTitle?: string
 }
 
-export default function DownloadProgress({ percent, speed, eta, status }: Props) {
+export default function DownloadProgress({ 
+  percent, 
+  speed, 
+  eta, 
+  status,
+  currentItem,
+  totalItems,
+  currentTitle
+}: Props) {
   const isMerging = status === "merging"
+  const isPlaylist = totalItems && totalItems > 1
   const clampedPercent = Math.min(100, Math.max(0, percent))
 
   return (
     <section className="w-full px-4 sm:px-6 pb-8">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-neutral-200 shadow-sm p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
               {isMerging ? (
                 <RefreshCw className="w-4 h-4 animate-spin text-neutral-700" />
+              ) : isPlaylist ? (
+                <ListVideo className="w-4 h-4 text-neutral-700" />
               ) : (
                 <Zap className="w-4 h-4 text-neutral-700" />
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-neutral-900 truncate">
-                {isMerging ? "Merging video and audio via FFmpeg..." : "Downloading media stream..."}
+                {isMerging 
+                  ? "Merging video and audio via FFmpeg..." 
+                  : isPlaylist && currentItem && totalItems
+                    ? `Downloading ${currentItem} of ${totalItems}: ${currentTitle || 'Media'}`
+                    : currentTitle || "Downloading media stream..."}
               </p>
               <p className="text-xs text-neutral-500">
                 {isMerging ? "Encoding target format" : "Direct stream extraction"}

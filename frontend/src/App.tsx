@@ -52,6 +52,8 @@ export default function App() {
       setMeta(data)
       if (data.type === "video" && data.formats?.length) {
         setSelectedFormat(data.formats[0].format_id)
+      } else if (data.type === "playlist") {
+        setSelectedFormat("best")
       }
     } catch (e) {
       toast.error((e as Error).message)
@@ -144,6 +146,8 @@ export default function App() {
             onOptionsChange={setAdvancedOptions}
             onDownload={(ids) => handleDownload(ids)}
             downloading={downloading}
+            selectedFormat={selectedFormat}
+            onFormatChange={setSelectedFormat}
           />
         )}
 

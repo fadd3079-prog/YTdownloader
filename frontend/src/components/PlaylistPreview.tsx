@@ -1,4 +1,4 @@
-import { Download, Loader2, ListVideo, User, Film, Music, CheckSquare, Square } from "lucide-react"
+import { Download, Loader2, ListVideo, User, Film, CheckSquare, Square, ChevronDown } from "lucide-react"
 import { formatDuration } from "../lib/utils"
 import type { PlaylistMeta, AdvancedOptions } from "../types"
 import AdvancedOptionsPanel from "./AdvancedOptionsPanel"
@@ -10,6 +10,8 @@ interface Props {
   onOptionsChange: (opts: AdvancedOptions) => void
   onDownload: (videoIds: string[]) => void
   downloading: boolean
+  selectedFormat: string
+  onFormatChange: (format: string) => void
 }
 
 export default function PlaylistPreview({
@@ -18,6 +20,8 @@ export default function PlaylistPreview({
   onOptionsChange,
   onDownload,
   downloading,
+  selectedFormat,
+  onFormatChange,
 }: Props) {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(
     new Set(meta.entries.map((e) => e.id))
@@ -124,6 +128,30 @@ export default function PlaylistPreview({
         </div>
 
         <div className="p-5 sm:p-6 bg-white border-t border-neutral-100">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-neutral-900 mb-1">Download Quality</h3>
+              <p className="text-xs text-neutral-500">Maximum quality limit for the playlist</p>
+            </div>
+            <div className="relative w-full sm:w-48 shrink-0">
+              <select
+                value={selectedFormat || "best"}
+                onChange={(e) => onFormatChange(e.target.value)}
+                disabled={downloading}
+                className="w-full appearance-none bg-neutral-50 border border-neutral-200 text-neutral-900 text-sm rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                <option value="best">Best Quality</option>
+                <option value="1080p">1080p Limit</option>
+                <option value="720p">720p Limit</option>
+                <option value="480p">480p Limit</option>
+                <option value="audio_mp3">Audio Only (MP3)</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-500">
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+
           <AdvancedOptionsPanel options={options} onChange={onOptionsChange} disabled={downloading} />
 
           <div className="mt-6">

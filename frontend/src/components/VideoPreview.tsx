@@ -1,4 +1,4 @@
-import { Download, Loader2, Clock, User, Film, Music } from "lucide-react"
+import { Download, Loader2, Clock, User, Film } from "lucide-react"
 import { formatDuration, formatBytes } from "../lib/utils"
 import type { VideoMeta, AdvancedOptions } from "../types"
 import AdvancedOptionsPanel from "./AdvancedOptionsPanel"
@@ -22,7 +22,6 @@ export default function VideoPreview({
   onDownload,
   downloading,
 }: Props) {
-  const isAudioOnly = options.audioOnly || selectedFormat === "audio_best"
 
   return (
     <section className="w-full px-4 sm:px-6 pb-8">
