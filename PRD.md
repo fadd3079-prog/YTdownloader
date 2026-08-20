@@ -16,11 +16,14 @@ Pengguna umum dan *power user* yang menginginkan alat ekstraksi media YouTube ya
 * Sebagai pengguna, saya ingin memilih format unduhan (Video MP4 atau Audio MP3) dan resolusi.
 * Sebagai pengguna, saya ingin melihat *progress bar* secara *real-time* saat video sedang diunduh dan digabungkan (merge) oleh FFmpeg.
 * Sebagai pengguna, saya ingin melihat riwayat unduhan saya sebelumnya tanpa harus *login*.
+* Sebagai pengguna, saya ingin menempelkan URL YouTube Playlist/Mix dan memilih video yang ingin diunduh atau mengunduh seluruh playlist sekaligus.
+* Sebagai pengguna, saya ingin opsi lanjutan (SponsorBlock removal, embed subtitle, format audio MP3/M4A).
 
 ## 5. Persyaratan Fungsional (Functional Requirements)
-* **Metadata Fetching:** Backend harus mengekstrak metadata URL menggunakan `yt-dlp` secara cepat.
-* **Format Selection:** Dropdown untuk memilih resolusi video atau ekstraksi audio saja.
-* **Real-time Progress:** Backend harus memancarkan Server-Sent Events (SSE) yang membaca `progress_hooks` dari `yt-dlp` untuk mengabari persentase ke Frontend.
+* **Metadata Fetching:** Backend mengekstrak metadata single video dan playlist/mix menggunakan `yt-dlp` secara cepat.
+* **Format Selection & Advanced Options:** Pemilihan resolusi, opsi audio-only (MP3/M4A), SponsorBlock removal, dan embed subtitles.
+* **Batch / Playlist Download:** Unduh seluruh playlist atau video terpilih dengan bundling zip otomatis.
+* **Real-time Progress:** Backend memancarkan Server-Sent Events (SSE) yang membaca `progress_hooks` dari `yt-dlp` mengabari persentase, status file, dan progress playlist ke Frontend.
 * **History Management:** Frontend menyimpan riwayat unduhan (Judul, URL, Format, Tanggal) ke dalam Local Storage browser.
 * **Auto-Cleanup:** Backend memiliki *scheduler/background task* sederhana untuk menghapus file di direktori sementara (misal `/downloads`) setelah 1 jam untuk menghemat *storage* server.
 
@@ -32,5 +35,5 @@ Pengguna umum dan *power user* yang menginginkan alat ekstraksi media YouTube ya
 * **Desain UI/UX:** WAJIB mengacu penuh pada file `DESIGN.md` yang ada di root direktori.
 
 ## 7. Cakupan (Scope)
-* **In Scope:** Unduh satu video (single URL), ekstraksi audio, pilihan resolusi, SSE progress bar, riwayat unduhan lokal.
-* **Out of Scope (Ditunda):** Autentikasi/Login pengguna, unduh playlist *batch* (bulk download), cloud database, sistem *multi-user* dengan *rate limiting*.
+* **In Scope:** Unduh satu video (single URL), YouTube Playlist & Mix batch download, seleksi video playlist, ekstraksi audio (MP3/M4A), pilihan resolusi, SponsorBlock removal, embed subtitle, SSE progress bar per video dan batch, riwayat unduhan lokal.
+* **Out of Scope (Ditunda):** Autentikasi/Login pengguna, cloud database, sistem *multi-user* dengan *rate limiting*.

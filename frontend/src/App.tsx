@@ -4,23 +4,34 @@ import Navbar from "./components/Navbar"
 import UrlInput from "./components/UrlInput"
 import VideoSkeleton from "./components/VideoSkeleton"
 import VideoPreview from "./components/VideoPreview"
+import PlaylistPreview from "./components/PlaylistPreview"
 import DownloadProgress from "./components/ProgressBar"
 import History from "./components/History"
+import Footer from "./components/Footer"
 import { fetchMeta, startDownloadSSE } from "./api"
 import { getHistory, addHistory } from "./storage"
-import type { VideoMeta, HistoryEntry } from "./types"
+import type { MediaAnalysis, HistoryEntry, AdvancedOptions } from "./types"
 
 interface Progress {
   percent: number
   speed: string
   eta: string
   status: string
+  currentItem?: number
+  totalItems?: number
+  currentTitle?: string
 }
 
 export default function App() {
   const [loading, setLoading] = useState(false)
-  const [meta, setMeta] = useState<VideoMeta | null>(null)
+  const [meta, setMeta] = useState<MediaAnalysis | null>(null)
   const [selectedFormat, setSelectedFormat] = useState("")
+  const [advancedOptions, setAdvancedOptions] = useState<AdvancedOptions>({
+    audioOnly: false,
+    audioFormat: "mp3",
+    sponsorblock: false,
+    embedSubs: false,
+  })
   const [downloading, setDownloading] = useState(false)
   const [progress, setProgress] = useState<Progress | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>(getHistory)
@@ -39,7 +50,7 @@ export default function App() {
     try {
       const data = await fetchMeta(url)
       setMeta(data)
-      if (data.formats?.length) {
+      if (data.type === "video" && data.formats?.length) {
         setSelectedFormat(data.formats[0].format_id)
       }
     } catch (e) {
@@ -49,21 +60,26 @@ export default function App() {
     }
   }, [])
 
-  const handleDownload = useCallback(() => {
-    if (!meta || !selectedFormat) return
+  const handleDownload = useCallback((videoIds: string[] = []) => {
+    if (!meta) return
     setDownloading(true)
     setProgress({ percent: 0, speed: "", eta: "", status: "downloading" })
 
     closeSSE.current?.()
     closeSSE.current = startDownloadSSE(
       currentUrl,
-      selectedFormat,
+      selectedFormat || "best",
+      advancedOptions,
+      videoIds,
       (data) => {
         setProgress({
           percent: (data.percent as number) || 0,
           speed: (data.speed as string) || "",
           eta: (data.eta as string) || "",
           status: (data.status as string) || "downloading",
+          currentItem: (data.current_item as number) || undefined,
+          totalItems: (data.total_items as number) || undefined,
+          currentTitle: (data.current_title as string) || undefined,
         })
       },
       (data) => {
@@ -79,12 +95,15 @@ export default function App() {
         a.click()
         a.remove()
 
-        const fmt = meta.formats.find((f) => f.format_id === selectedFormat)
+        const formatLabel = advancedOptions.audioOnly 
+          ? `Audio ${advancedOptions.audioFormat.toUpperCase()}`
+          : (meta.type === "video" ? (meta.formats.find((f) => f.format_id === selectedFormat)?.label || selectedFormat) : selectedFormat)
+          
         addHistory({
           title: meta.title,
           url: currentUrl,
-          format: fmt?.label || selectedFormat,
-          thumbnail: meta.thumbnail,
+          format: formatLabel,
+          thumbnail: meta.type === "video" ? meta.thumbnail : (meta.entries?.[0]?.thumbnail || ""),
         })
         setHistory(getHistory())
         toast.success("Download complete")
@@ -95,23 +114,35 @@ export default function App() {
         toast.error(msg)
       }
     )
-  }, [meta, selectedFormat, currentUrl])
+  }, [meta, selectedFormat, currentUrl, advancedOptions])
 
   return (
-    <div className="min-h-screen bg-canvas-soft">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col justify-between selection:bg-neutral-900 selection:text-white">
       <Navbar />
 
-      <main className="relative">
+      <main className="w-full flex-1">
         <UrlInput onSubmit={handleAnalyze} loading={loading} />
 
         {loading && <VideoSkeleton />}
 
-        {meta && !loading && (
+        {meta && !loading && meta.type === "video" && (
           <VideoPreview
             meta={meta}
             selectedFormat={selectedFormat}
             onFormatChange={setSelectedFormat}
-            onDownload={handleDownload}
+            options={advancedOptions}
+            onOptionsChange={setAdvancedOptions}
+            onDownload={() => handleDownload([])}
+            downloading={downloading}
+          />
+        )}
+        
+        {meta && !loading && meta.type === "playlist" && (
+          <PlaylistPreview
+            meta={meta}
+            options={advancedOptions}
+            onOptionsChange={setAdvancedOptions}
+            onDownload={(ids) => handleDownload(ids)}
             downloading={downloading}
           />
         )}
@@ -122,32 +153,27 @@ export default function App() {
             speed={progress.speed}
             eta={progress.eta}
             status={progress.status}
+            currentItem={progress.currentItem}
+            totalItems={progress.totalItems}
+            currentTitle={progress.currentTitle}
           />
         )}
 
         <History entries={history} onClear={() => setHistory([])} />
       </main>
 
-      <footer className="border-t border-hairline py-8 px-6">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-[12px] leading-[16px] text-mute">
-            Built with yt-dlp · FFmpeg · FastAPI · React
-          </span>
-          <span className="font-mono text-[12px] leading-[16px] text-mute">
-            FADD GRAPHICS
-          </span>
-        </div>
-      </footer>
+      <Footer />
 
       <Toaster
         position="bottom-right"
         toastOptions={{
           style: {
             background: "#ffffff",
-            border: "1px solid #ebebeb",
-            boxShadow: "0px 1px 1px rgba(0,0,0,0.02), 0px 8px 16px -4px rgba(0,0,0,0.04), 0px 24px 32px -8px rgba(0,0,0,0.06)",
-            borderRadius: "8px",
-            fontSize: "14px",
+            border: "1px solid #e5e5e5",
+            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
+            borderRadius: "12px",
+            fontSize: "13px",
+            fontWeight: "500",
             fontFamily: "Inter, system-ui, sans-serif",
             color: "#171717",
           },

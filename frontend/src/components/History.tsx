@@ -1,5 +1,4 @@
-import { Trash2, ExternalLink } from "lucide-react"
-import { Button } from "./ui/button"
+import { Trash2, ExternalLink, History as HistoryIcon } from "lucide-react"
 import { clearHistory } from "../storage"
 import { timeAgo } from "../lib/utils"
 import type { HistoryEntry } from "../types"
@@ -18,36 +17,35 @@ export default function History({ entries, onClear }: Props) {
   }
 
   return (
-    <section className="px-6 py-16">
+    <section className="w-full px-4 sm:px-6 py-12 sm:py-16">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-[24px] font-semibold leading-[32px] tracking-[-0.96px] text-ink">
-              Recent downloads.
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <HistoryIcon className="w-4 h-4 text-neutral-500" />
+            <h2 className="text-lg font-bold text-neutral-900 tracking-tight">
+              Download History
             </h2>
-            <p className="text-[14px] leading-[20px] text-mute mt-1">
-              {entries.length} {entries.length === 1 ? "item" : "items"} in local history
-            </p>
+            <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-xs font-mono font-medium">
+              {entries.length}
+            </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
+
+          <button
             onClick={handleClear}
-            className="text-mute hover:text-error"
+            className="text-xs font-medium text-neutral-500 hover:text-red-600 transition-colors duration-150 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Clear
-          </Button>
+            <span>Clear all</span>
+          </button>
         </div>
 
-        <div className="space-y-2">
-          {entries.map((entry, i) => (
+        <div className="space-y-2.5">
+          {entries.map((entry) => (
             <div
               key={entry.id}
-              className="group bg-canvas rounded-[8px] shadow-level-2 hover:shadow-level-3 transition-shadow duration-200 p-4 flex gap-4 items-center animate-fade-up"
-              style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
+              className="group bg-white rounded-xl border border-neutral-200 p-3 sm:p-3.5 flex items-center gap-3.5 hover:border-neutral-300 hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-[72px] h-[42px] rounded-[4px] overflow-hidden bg-canvas-soft-2 shrink-0">
+              <div className="w-20 sm:w-24 aspect-video rounded-lg overflow-hidden bg-neutral-100 shrink-0 border border-neutral-100">
                 <img
                   src={entry.thumbnail}
                   alt=""
@@ -56,16 +54,16 @@ export default function History({ entries, onClear }: Props) {
                 />
               </div>
 
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[14px] font-medium leading-[20px] tracking-[-0.28px] text-ink truncate">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-semibold text-neutral-900 truncate group-hover:text-neutral-700 transition-colors">
                   {entry.title}
                 </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="font-mono text-[12px] leading-[16px] text-mute">
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="inline-block px-1.5 py-0.5 rounded bg-neutral-100 font-mono text-[11px] font-medium text-neutral-600 uppercase">
                     {entry.format}
                   </span>
-                  <span className="text-hairline-strong">·</span>
-                  <span className="text-[12px] leading-[16px] text-mute">
+                  <span className="text-neutral-300">·</span>
+                  <span className="text-[11px] text-neutral-400">
                     {timeAgo(entry.date)}
                   </span>
                 </div>
@@ -75,7 +73,7 @@ export default function History({ entries, onClear }: Props) {
                 href={entry.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-mute hover:text-ink p-2"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all duration-150 shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
